@@ -115,7 +115,7 @@ update : 2018. 07. 13
 
 #text혹은 json의 경우
 
-//① Closer
+//① Closure
 (function(){
 
 	//② 클래스 객체생성 ( object pool을 사용하여 한번만 객체 생성)
@@ -156,7 +156,7 @@ update : 2018. 07. 13
 
 # file 업로드의 경우
 
-//① Closer
+//① Closure
 (function(){
 	$(document).on("click touchstart", "#button", function(e){
 		
