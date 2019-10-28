@@ -27,6 +27,11 @@ function complete(xhr, res)
 
 }
 
+PHP
+$json = file_get_contents('php://input');
+var_dump( $json );
+die();
+
 ************************************************************************************/
 
 // 데이터 타입을 json 형식으로 넘길경우 지정, 다음과 같은 헤더가 선언된다
