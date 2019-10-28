@@ -7,9 +7,34 @@ author : 허정진  http://tistory.serpiko.com
 update : 2018. 07. 13
 
 
+// 2019 07 09 변경
+// METHOD PATCH 추가
+
+//[ update history ] 
+
+//- 2018. 07. 17 추가
+
+//데이터 타입을 json 형식으로 넘길경우 지정
+
+//var xhrClass = new XhrClass({"dataType": "json"});
+//var rqObj = {};
+//rqObj.customer_domain = "mydomain";
+//rqObj.wide_names = ["name1", "name2"];
+
+{
+   "customer_domain" : "mydomain",
+   "wide_names" : ["name1","name2"]
+}
+
+************************************************************************************/
+
+// 데이터 타입을 json 형식으로 넘길경우 지정, 다음과 같은 헤더가 선언된다
+// setRequestHeader(application/json; charset=utf-8)
+// setRequestHeader("Accept", "application/json, text/javascript, */*; q=0.01")
 
 
-[ update history ] 
+
+/************************************************************************************
 
 - 2018. 07. 13 변경
 
@@ -184,15 +209,22 @@ var XhrClass = function($obj){
 	this.callback;
 
 	//external scalable extend : 인스턴스 생성시 외부에서 확장 가능한 객체
+	// 2019.10.14 김민우 추가
 	this.defaultObj = {
-		"type"		: "json",
+		"type"		: "json", // 리턴타입
+		"dataType"  : "",
 		"method"	: "GET",
 		"asyncBool" : true,
 		"log"		: false,
 		"timeout"	: 1000 * 29,
 		"millisecond" : 1000 * 60,
 		"textMillisecond" : 500,
-		"textDisplay" : true
+		"textDisplay" : true,
+		"contentType" : "application/x-www-form-urlencoded; charset=UTF-8", //  or application/json; charset=utf-8
+		"customHeader" : false,
+		"customHeaderKey" : "",
+		"customHeaderValue" : "",
+		"customHeaders": {},
 	};
 	for(var key in $obj){
 		if( $obj.hasOwnProperty(key) ){
@@ -325,7 +357,7 @@ XhrClass.prototype = (function(){
 			container.style.color = "#FFF";
 			container.style.fontSize = "17px";
 			container.style.fontWeight = "bold";
-			container.style.position = "absolute";
+			container.style.position = "fixed";
 			container.style.left = 0;
 			container.style.top = 0;
 			container.style.backgroundColor = "rgba(0,0,0, 0.35)";
@@ -515,7 +547,7 @@ XhrClass.prototype = (function(){
 		* @ sendRequest : url, param, callback [,type ,method, asyncBool, log] : 실제 send 도달 메서드
 		*
 		**************************************************************************************************/
-		sendRequest: function($url, $param, $callback,       $type, $method, $asyncBool, $log, $repeatBool){
+		sendRequest: function($url, $param, $callback, $type, $method, $asyncBool, $log, $repeatBool){
 			
 			//필수파라메터 (url, param, callback)
 			if( typeof $url == "undefined" || $url == "" ) throw new Error( this.getLog($url, $param) + "전달받은 url이 없습니다." );
@@ -536,16 +568,28 @@ XhrClass.prototype = (function(){
 			this.defaultObj.method = $method;
 			this.defaultObj.asyncBool = $asyncBool;
 			this.defaultObj.log = $log;
-
+			
 			if( $method.toUpperCase() == "FILE" ){
 				this.xhr.open("POST", $url, true);
 				// 주의!!. 타입이 FILE 일 경우 Header의 타입을 따로 지정하지 않는다.
-				//this.xhr.setRequestHeader("Content-Type", "multipart/form-data");
 			}else{
-				
+
 				//repeat 값이 true 이면 param 재가공 루틴을 지나간다
 				if( typeof $repeatBool == "undefined" || $repeatBool == null || $repeatBool == false ){
-					$param = ( $param == null || $param == '' ) ? null : encodeURI($param); 
+					
+					
+					if( $param == null || $param == '' ){
+						$param = null;
+					}else{
+						if(this.defaultObj.dataType === "" && typeof $param === "object") this.defaultObj.dataType = "json";
+						if( (this.defaultObj.dataType).toLowerCase() == "json" ){
+							$param = JSON.stringify($param);
+						}else{
+							$param = encodeURI($param); 
+						}
+						
+					}
+
 					this.defaultObj.param = $param; //전역변수 param
 
 					$method = $method.toLowerCase();
@@ -554,16 +598,34 @@ XhrClass.prototype = (function(){
 					else if ( $method == "post" ) $method = "POST";
 					else if ( $method == "delete" ) $method = "DELETE";
 					else if ( $method == "put" ) $method = "PUT";
+					else if ( $method == "patch" ) $method = "PATCH";
 
 					if($method == "GET" && $param != null) { // GET 이면 전역변수 url ( + param )
 						this.url = $url + "?" + $param; 
 					}
 				}
-
 				this.xhr.open($method, this.url, this.defaultObj.asyncBool);
-				this.xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded; charset=UTF-8");
+				
+				if( this.defaultObj.customHeader ){
+					if(this.defaultObj.customHeaderKey) this.xhr.setRequestHeader( this.defaultObj.customHeaderKey, this.defaultObj.customHeaderValue );
+					var headers = this.defaultObj.customHeaders;
+					for(key in headers) {
+						try {
+							this.xhr.setRequestHeader( key, headers[key] );
+						} catch(e) {
+							 console.warn(e.toString());
+						}
+					}
+				}
 
-				if ($method == "POST" || $method == "DELETE" || $method == "PUT"){
+				if( (this.defaultObj.dataType).toLowerCase() == "json" ){
+					this.xhr.setRequestHeader("Accept", "application/json, text/javascript, */*; q=0.01");
+					this.xhr.setRequestHeader("Content-type", "application/json; charset=utf-8");
+				}else{
+					this.xhr.setRequestHeader("Content-type", this.defaultObj.contentType);
+				}
+
+				if ($method == "POST" || $method == "DELETE" || $method == "PUT" || $method == "PATCH"){
 					$param = $param;
 				}else{
 					$param = null;
@@ -591,7 +653,7 @@ XhrClass.prototype = (function(){
 			$this.intervalID = window.setInterval(function(){
 
 				//$this.abort(); //전송 중지시키고
-				$this.sendRequest($this.url, $this.defaultObj.param, $this.callback,   $this.defaultObj.type, $this.defaultObj.method, $this.defaultObj.asyncBool, $this.defaultObj.log, true );
+				$this.sendRequest($this.url, $this.defaultObj.param, $this.callback, $this.defaultObj.type, $this.defaultObj.method, $this.defaultObj.asyncBool, $this.defaultObj.log, true );
 
 			}, $millisecond);
 			
@@ -617,6 +679,7 @@ XhrClass.prototype = (function(){
 		**************************************************************************************************/
 		timeout: function(){
 			var $this = this;
+
 			// This is a known IE10 bug : xhr.timeout after the xhr.open(...) line
 			try{
 				$this.xhr.timeout = $this.defaultObj.timeout;
@@ -675,47 +738,51 @@ XhrClass.prototype = (function(){
 					
 					$this.textDisplayHandler(false); // text hide : (최초에 한번은 실행됩니다)
 
-					if($this.xhr.status >= 200 || $this.xhr.status < 300){ //응답이 정상인 경우
+					var res;
 
-						var res;
-						
-						/**
-						TODO :  typeof $this.defaultObj.type
-								
-								데이터 타입을 검사하여 데이터형식에 따라서 
-								
-								자동으로 데이터를 처리하도록 하는 로직.
+					/**
+					 TODO :  typeof $this.defaultObj.type
 
-								현재는 switch로 되어있어서 직접 지정해준 타입으로만 결과값을 처리한다.
-						**/
+					 데이터 타입을 검사하여 데이터형식에 따라서
 
-						switch($this.defaultObj.type)
-						{
-							/*
-							* text
-							*/	
-							case 'text' :
-								res = $this.xhr.responseText;
+					 자동으로 데이터를 처리하도록 하는 로직.
+
+					 현재는 switch로 되어있어서 직접 지정해준 타입으로만 결과값을 처리한다.
+					 **/
+
+					switch($this.defaultObj.type)
+					{
+						/*
+            * text
+            */
+						case 'text' :
+							res = $this.xhr.responseText;
 							break;
 
-							/*
-							* json
-							*
-							* {"name":"myName"}  =>  res.name 은 myName
-							*
-							* [{"name":"myName"}]  =>  res[0].name 은 myName
-							*/
-							case 'json' :
+						/*
+            * json
+            *
+            * {"name":"myName"}  =>  res.name 은 myName
+            *
+            * [{"name":"myName"}]  =>  res[0].name 은 myName
+            */
+						case 'json' :
+							try {
 								res = $this.parseJSON( $this.xhr.responseText );
+							} catch(e) {
+								res = {};
+							}
 							break;
-							
-						}
 
-						$this.callback( $this.xhr, res );
+					}
 
+					$this.callback( $this.xhr, res, $this.xhr.status );
+
+					if($this.xhr.status >= 200 && $this.xhr.status < 400){ //응답이 정상인 경우
 						if($this.defaultObj.log) console.log( $this.getLog($this.url, $this.param)+ '로드를 성공했습니다. 성공코드 xhr.status: [' + $this.xhr.status +']' );
-					}else
-						console.log( $this.getLog($this.url, $this.param)+ '로드를 실패했습니다. 에러코드 xhr.status: [' + $this.xhr.status +']' );
+					}else {
+							console.log( $this.getLog($this.url, $this.param)+ '로드를 실패했습니다. 에러코드 xhr.status: [' + $this.xhr.status +']' )
+					}
 				}
 			}
 		
