@@ -29,7 +29,8 @@ function complete(xhr, res)
 
 PHP
 $json = file_get_contents('php://input');
-var_dump( $json );
+$data = json_decode($json, true); // [, bool $assoc=FALSE ] => true일때 객체가 아니라 연관배열로 변환된다
+var_dump( $data );
 die();
 
 ************************************************************************************/
