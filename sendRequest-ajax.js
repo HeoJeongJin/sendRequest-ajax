@@ -4,7 +4,7 @@ sendRequest-ajax
 
 author : 허정진  http://tistory.serpiko.com
 
-update : 2018. 07. 13
+update : 2019. 10. 28
 
 
 // 2019 07 09 변경
@@ -15,15 +15,16 @@ update : 2018. 07. 13
 //- 2018. 07. 17 추가
 
 //데이터 타입을 json 형식으로 넘길경우 지정
-
-//var xhrClass = new XhrClass({"dataType": "json"});
-//var rqObj = {};
-//rqObj.customer_domain = "mydomain";
-//rqObj.wide_names = ["name1", "name2"];
-
+var xhrClass = new XhrClass({"dataType": "json"});
+var rqObj = {};
+rqObj.customer_domain = "mydomain";
+rqObj.wide_names = ["name1", "name2"];
+rqObj.func = "functionName";
+var url = "/api/url/";
+xhrClass.sendRequest(url, rqObj, complete, 'json', 'post');
+function complete(xhr, res)
 {
-   "customer_domain" : "mydomain",
-   "wide_names" : ["name1","name2"]
+
 }
 
 ************************************************************************************/
