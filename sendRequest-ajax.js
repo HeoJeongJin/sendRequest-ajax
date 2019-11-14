@@ -6,6 +6,9 @@ author : 허정진  http://tistory.serpiko.com
 
 update : 2019. 10. 28
 
+// 2019.11.14
+// 서버통신 메세지에 이모지(모래시계) 추가, 클래스 constructor 역참조 추가
+
 
 // 2019 07 09 변경
 // METHOD PATCH 추가
@@ -240,7 +243,6 @@ var XhrClass = function($obj){
 	}
 	
 	//build
-	this.build.classLength++;
 	this.build();
 
 }//end. XhrClass
@@ -249,6 +251,8 @@ XhrClass.prototype = (function(){
 
 	return{
 		
+		constructor: XhrClass, // 역 참조를 위해 constructor 프로퍼티를 명시적으로 설정한다.
+
 		/**************************************************************************************************
 		*
 		* @ build : 생성자
@@ -349,7 +353,8 @@ XhrClass.prototype = (function(){
 			att = document.createAttribute("id");  
 			att.value = 'sendRequest-ajax_directionText';
 			span.setAttributeNode(att);
-			span.textContent = "\u00A0\u00A0서버와 통신 중 입니다..."; // \u00A0 = &nbsp; (unicode encode)
+			// 이모지 \u[code]
+			span.textContent = "\u23F3\u00A0서버와 통신 중 입니다..."; // \u00A0 = &nbsp; (unicode encode)
 			div.appendChild(span);
 
 			//div.innerHTML = "<i class='fa fa-refresh fa-spin fa-lg'></i>&nbsp;&nbsp;<span id='sendRequest-ajax_directionText'>서버와 통신 중 입니다...</span>";
